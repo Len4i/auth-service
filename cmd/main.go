@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Len4i/auth-service/internal/app"
 	"github.com/Len4i/auth-service/internal/config"
 )
 
@@ -34,17 +35,19 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	// TODO: move timeout to config
+	application := app.NewApp(log, cfg.StoragePath, cfg.TokenTTL, cfg.GRPC.Port)
+	go func() {
+		application.GRPCApp.MustRun()
+	}()
+
+	<-done
 	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// if err := srv.Shutdown(ctx); err != nil {
-	// 	log.Error("failed to stop server", "Error", err)
-
-	// 	return
-	// }
-
-	// TODO: close all open connections
+	if err := application.GRPCApp.Stop(); err != nil {
+		log.Error("failed to stop grpc server", err)
+		os.Exit(1)
+	}
 
 	log.Info("server stopped")
 }
