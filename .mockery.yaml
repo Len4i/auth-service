@@ -1,0 +1,16 @@
+inpackage: False
+with-expecter: True
+all: True
+dir: "{{.InterfaceDir}}/mocks"
+filename: "{{.InterfaceName}}.go"
+outpkg: "mocks"
+packages:
+  github.com/lightrun-platform/devops/versions-go/internal/services/k8s:
+    config:
+      recursive: true
+  github.com/lightrun-platform/devops/versions-go/internal/services/collector:
+    config:
+      recursive: true
+  github.com/lightrun-platform/devops/versions-go/internal/http-server/handlers/versions:
+    config:
+      recursive: true
