@@ -1,1 +1,4 @@
 configs/dev.yaml
+storage/*
+.env
+.vscode

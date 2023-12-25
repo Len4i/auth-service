@@ -7,6 +7,7 @@ import (
 	"os"
 
 	authgRPC "github.com/Len4i/auth-service/internal/grpc/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"google.golang.org/grpc"
 )
 
@@ -16,9 +17,9 @@ type App struct {
 	port       int
 }
 
-func NewApp(log *slog.Logger, port int) *App {
-	grpcServer := grpc.NewServer()
-	authgRPC.Register(grpcServer)
+func NewApp(log *slog.Logger, port int, authSvc authgRPC.Auth) *App {
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recovery.UnaryServerInterceptor()))
+	authgRPC.Register(grpcServer, authSvc)
 	return &App{
 		log:        log,
 		grpcServer: grpcServer,

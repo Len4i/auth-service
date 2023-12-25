@@ -5,6 +5,8 @@ import (
 	"time"
 
 	grpcApp "github.com/Len4i/auth-service/internal/app/grpc"
+	"github.com/Len4i/auth-service/internal/services/auth"
+	"github.com/Len4i/auth-service/internal/storage/sqlite"
 )
 
 type App struct {
@@ -17,7 +19,14 @@ func NewApp(
 	tokenTTL time.Duration,
 	port int,
 ) *App {
-	grpcApp := grpcApp.NewApp(log, port)
+	storage, err := sqlite.New(storagePath)
+	if err != nil {
+		log.Error("failed to init storage", "error", err)
+		return nil
+	}
+
+	authSvc := auth.NewAuth(log, storage, storage, storage, tokenTTL)
+	grpcApp := grpcApp.NewApp(log, port, authSvc)
 	return &App{
 		GRPCApp: grpcApp,
 	}

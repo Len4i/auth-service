@@ -31,25 +31,23 @@ func main() {
 	)
 	log.Debug("debug messages are enabled")
 
-	// Channel for graceful shutdown
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
 	application := app.NewApp(log, cfg.StoragePath, cfg.TokenTTL, cfg.GRPC.Port)
-	go func() {
-		application.GRPCApp.MustRun()
-	}()
+	go application.GRPCApp.MustRun()
 
-	<-done
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Channel for graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	<-stop
+
+	_, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-
 	if err := application.GRPCApp.Stop(); err != nil {
 		log.Error("failed to stop grpc server", err)
 		os.Exit(1)
 	}
 
-	log.Info("server stopped")
+	log.Info("exiting the app")
 }
 
 func setupLogger(env string) *slog.Logger {
