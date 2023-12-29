@@ -2,8 +2,11 @@ package auth
 
 import (
 	"context"
+	"errors"
+	"net/mail"
 
 	aaav1 "github.com/Len4i/aaa/gen/go/aaa"
+	"github.com/Len4i/auth-service/internal/services/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,6 +54,9 @@ func (s *ServerApi) Register(ctx context.Context, req *aaav1.RegisterRequest) (*
 
 	userID, err := s.auth.Register(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
+		if errors.Is(err, auth.ErrorUserExists) {
+			return nil, status.Error(codes.Internal, "user already exists")
+		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -76,6 +82,11 @@ func (s *ServerApi) IsAdmin(ctx context.Context, req *aaav1.IsAdminRequest) (*aa
 func validateRequestCreds(email string, password string) error {
 	if email == "" {
 		return status.Error(codes.InvalidArgument, "email is required")
+	}
+	// validate that email is valid
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, "email is not valid")
 	}
 	if password == "" {
 		return status.Error(codes.InvalidArgument, "password is required")

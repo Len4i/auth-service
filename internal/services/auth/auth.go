@@ -17,6 +17,7 @@ var (
 	ErrorInvalidCredentials = errors.New("invalid credentials")
 	ErrorInvalidAppID       = errors.New("invalid app id")
 	ErrorInvalidUserID      = errors.New("invalid user id")
+	ErrorUserExists         = errors.New("user already exists")
 )
 
 type UserSaver interface {
@@ -68,7 +69,7 @@ func (a *Auth) Register(ctx context.Context, email string, password string) (use
 	if err != nil {
 		if errors.Is(err, storage.ErrorUserExists) {
 			log.Warn("user already exists", slog.String("email", email))
-			return 0, fmt.Errorf("%s: %w", op, ErrorInvalidUserID)
+			return 0, fmt.Errorf("%s: %w", op, ErrorUserExists)
 		}
 		log.Error("failed to save user", err)
 		return 0, fmt.Errorf("%s: %w", op, err)
